@@ -20,4 +20,7 @@ public class Assessment {
     public int getSleepScore()  { return sleepScore; }
     public int getStressScore() { return stressScore; }
     public int getMoodScore()   { return moodScore; }
+    public int getsocialScore(){return socialScore;}
+    public int getfocusScore(){return socialScore;}
+    
 }

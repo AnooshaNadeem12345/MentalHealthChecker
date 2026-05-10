@@ -70,7 +70,6 @@ public class StudentMentalHealthGUI extends JFrame {
             }
         };
 
-        // Header
         JPanel header = new JPanel(new BorderLayout()) {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
@@ -97,13 +96,11 @@ public class StudentMentalHealthGUI extends JFrame {
         header.add(ht, BorderLayout.CENTER);
         root.add(header, BorderLayout.NORTH);
 
-        // Content
         JPanel content = new JPanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setOpaque(false);
         content.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
 
-        // Info card
         JPanel infoInner = new JPanel(new GridLayout(0,1,0,8));
         infoInner.setOpaque(false);
         infoInner.add(makeFieldLabel("Full Name"));
@@ -115,7 +112,6 @@ public class StudentMentalHealthGUI extends JFrame {
         content.add(wrapCard("Student Information", infoInner));
         content.add(Box.createVerticalStrut(14));
 
-        // Sliders card
         JPanel sliderInner = new JPanel();
         sliderInner.setLayout(new BoxLayout(sliderInner, BoxLayout.Y_AXIS));
         sliderInner.setOpaque(false);
@@ -145,19 +141,18 @@ public class StudentMentalHealthGUI extends JFrame {
         content.add(wrapCard("Assessment Questions", sliderInner));
         content.add(Box.createVerticalStrut(14));
 
-        // Save button
         saveBtn = makeButton("CHECK MENTAL HEALTH", BLUE);
         saveBtn.addActionListener(e -> saveRecord());
         content.add(saveBtn);
 
-       JScrollPane scroll = new JScrollPane(content);
-scroll.setBorder(null);
-scroll.setOpaque(false);
-scroll.getViewport().setOpaque(false);
-scroll.getVerticalScrollBar().setUnitIncrement(16);
-scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-root.add(scroll, BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(content);
+        scroll.setBorder(null);
+        scroll.setOpaque(false);
+        scroll.getViewport().setOpaque(false);
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        root.add(scroll, BorderLayout.CENTER);
         return root;
     }
 
@@ -178,8 +173,8 @@ root.add(scroll, BorderLayout.CENTER);
 
         JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         btnBar.setOpaque(false);
-        JButton addNewBtn    = makeSmallButton("+ Add New",        WHITE,           BLUE);
-        JButton deleteTopBtn = makeSmallButton("Delete Selected",  new Color(255,80,80), WHITE);
+        JButton addNewBtn    = makeSmallButton("+ Add New",       WHITE, BLUE);
+        JButton deleteTopBtn = makeSmallButton("Delete Selected", WHITE, BLUE);
         addNewBtn.addActionListener(e -> { clearForm(); tabs.setSelectedIndex(0); });
         btnBar.add(addNewBtn);
         btnBar.add(deleteTopBtn);
@@ -202,9 +197,9 @@ root.add(scroll, BorderLayout.CENTER);
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 12));
         btnPanel.setBackground(BG);
 
-        JButton editBtn   = makeSmallButton("  Edit Selected",   BLUE,  WHITE);
-        JButton deleteBtn = makeSmallButton("  Delete Selected", RED,   WHITE);
-        JButton exportBtn = makeSmallButton("  Export to File",  GREEN, WHITE);
+        JButton editBtn   = makeSmallButton("  Edit Selected",   WHITE, BLUE);
+        JButton deleteBtn = makeSmallButton("  Delete Selected", WHITE, RED);
+        JButton exportBtn = makeSmallButton("  Export to File",  WHITE, GREEN);
 
         editBtn.addActionListener(e -> {
             int row = table.getSelectedRow();
@@ -303,7 +298,6 @@ root.add(scroll, BorderLayout.CENTER);
         Color statusColor = total <= 10 ? GREEN : (total <= 17 ? ORANGE : RED);
         String emoji      = total <= 10 ? "✅" : (total <= 17 ? "⚠️" : "🔴");
 
-        // Header bar
         JPanel header = new JPanel(new BorderLayout()) {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
@@ -327,20 +321,17 @@ root.add(scroll, BorderLayout.CENTER);
         hl.add(nameLabel); hl.add(statusLabel);
         header.add(hl, BorderLayout.CENTER);
 
-        // Score badge on the right
         JLabel scoreBadge = new JLabel(total + "/25", SwingConstants.CENTER);
         scoreBadge.setFont(new Font("Segoe UI", Font.BOLD, 22));
         scoreBadge.setForeground(WHITE);
         scoreBadge.setPreferredSize(new Dimension(80, 50));
         header.add(scoreBadge, BorderLayout.EAST);
 
-        // Body
         JPanel body = new JPanel();
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setBackground(new Color(248, 250, 255));
         body.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
 
-        // Score bar
         JLabel scoreTitle = new JLabel("Score Breakdown");
         scoreTitle.setFont(new Font("Segoe UI", Font.BOLD, 12));
         scoreTitle.setForeground(TEXT_MUTED);
@@ -348,7 +339,6 @@ root.add(scroll, BorderLayout.CENTER);
         body.add(scoreTitle);
         body.add(Box.createVerticalStrut(8));
 
-        // Progress bar
         JPanel barBg = new JPanel(new BorderLayout()) {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
@@ -366,7 +356,6 @@ root.add(scroll, BorderLayout.CENTER);
         body.add(barBg);
         body.add(Box.createVerticalStrut(18));
 
-        // Suggestion
         JLabel suggTitle = new JLabel("Suggestion");
         suggTitle.setFont(new Font("Segoe UI", Font.BOLD, 12));
         suggTitle.setForeground(TEXT_MUTED);
@@ -386,7 +375,6 @@ root.add(scroll, BorderLayout.CENTER);
         body.add(suggArea);
         body.add(Box.createVerticalStrut(20));
 
-        // Close button
         JButton closeBtn = new JButton("Close") {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
@@ -413,7 +401,9 @@ root.add(scroll, BorderLayout.CENTER);
         dialog.setVisible(true);
     }
 
-    // Shared table styling
+    // ══════════════════════════════════════════
+    //  SHARED TABLE STYLING
+    // ══════════════════════════════════════════
     JTable buildStyledTable(DefaultTableModel model) {
         JTable table = new JTable(model);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -493,8 +483,6 @@ root.add(scroll, BorderLayout.CENTER);
         saveToFile();
         refreshTable();
         refreshHistory();
-
-        // Show result in a new popup window
         showResultWindow(name, total, status, suggestion);
     }
 
@@ -521,7 +509,7 @@ root.add(scroll, BorderLayout.CENTER);
     void loadRecordIntoForm(int index) {
         editingIndex = index;
         StudentRecord rec = records.get(index);
-        setField(nameField, rec.getName(),             "e.g. Anoosha Khan");
+        setField(nameField, rec.getName(),                "e.g. Anoosha Khan");
         setField(ageField,  String.valueOf(rec.getAge()), "e.g. 19");
         sleepSlider.setValue(rec.getSleepScore());
         stressSlider.setValue(rec.getStressScore());
@@ -532,9 +520,25 @@ root.add(scroll, BorderLayout.CENTER);
         saveBtn.setText("  UPDATE RECORD");
     }
 
+    // ══════════════════════════════════════════
+    //  EXPORT  ← FIXED METHOD
+    // ══════════════════════════════════════════
     void exportSummary() {
-        if (records.isEmpty()) { JOptionPane.showMessageDialog(this, "No records to export."); return; }
-        try (PrintWriter pw = new PrintWriter(new FileWriter("summary_report.txt"))) {
+        if (records.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No records to export.");
+            return;
+        }
+
+        JFileChooser chooser = new JFileChooser();
+        chooser.setSelectedFile(new File("summary_report.txt"));
+
+        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
+            return; // user cancelled
+        }
+
+        File file = chooser.getSelectedFile();
+
+        try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
             pw.println("========================================");
             pw.println("   STUDENT MENTAL HEALTH SUMMARY REPORT");
             pw.println("========================================");
@@ -545,11 +549,11 @@ root.add(scroll, BorderLayout.CENTER);
             pw.println("Good: " + good + "  |  Moderate: " + mod + "  |  High Stress: " + high);
             pw.println("----------------------------------------");
             for (StudentRecord rec : records) {
-                pw.println("Name: "+rec.getName()+"  |  Age: "+rec.getAge());
-                pw.println("Score: "+rec.getTotalScore()+"/25  |  Status: "+rec.getStatus()+"  |  Date: "+rec.getDate());
+                pw.println("Name: " + rec.getName() + "  |  Age: " + rec.getAge());
+                pw.println("Score: " + rec.getTotalScore() + "/25  |  Status: " + rec.getStatus() + "  |  Date: " + rec.getDate());
                 pw.println("----------------------------------------");
             }
-            JOptionPane.showMessageDialog(this, "Exported to summary_report.txt!", "Done", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Exported to:\n" + file.getAbsolutePath(), "Done", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, "Export failed: " + ex.getMessage());
         }
