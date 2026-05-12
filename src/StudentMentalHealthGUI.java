@@ -10,7 +10,6 @@ import java.util.ArrayList;
 
 public class StudentMentalHealthGUI extends JFrame {
 
-    // ── Colors ──
     final Color BG          = new Color(235, 240, 255);
     final Color WHITE       = Color.WHITE;
     final Color BLUE        = new Color(67, 97, 238);
@@ -22,14 +21,17 @@ public class StudentMentalHealthGUI extends JFrame {
     final Color RED         = new Color(200, 30, 30);
     final Color CARD_BORDER = new Color(210, 218, 248);
 
-    // ── Data ──
-    ArrayList<StudentRecord> records = new ArrayList<>();
-    final String FILE_NAME = "mental_health_records.txt";
+    // ── Two separate lists ──────────────────────────────────────────────────
+    ArrayList<StudentRecord> records = new ArrayList<>();   // active records (can be deleted/edited)
+    ArrayList<StudentRecord> history = new ArrayList<>();   // permanent audit log (never deleted)
+
+    final String FILE_NAME         = "mental_health_records.txt";
+    final String HISTORY_FILE_NAME = "mental_health_history.txt"; // separate file for history
+
     DefaultTableModel tableModel;
     DefaultTableModel historyModel;
     int editingIndex = -1;
 
-    // ── Form fields ──
     JTextField nameField, ageField;
     JSlider sleepSlider, stressSlider, moodSlider, socialSlider, focusSlider;
     JLabel sleepVal, stressVal, moodVal, socialVal, focusVal;
@@ -58,9 +60,6 @@ public class StudentMentalHealthGUI extends JFrame {
         setVisible(true);
     }
 
-    // ══════════════════════════════════════════
-    //  TAB 1 — FORM
-    // ══════════════════════════════════════════
     JPanel buildFormTab() {
         JPanel root = new JPanel(new BorderLayout()) {
             protected void paintComponent(Graphics g) {
@@ -84,7 +83,7 @@ public class StudentMentalHealthGUI extends JFrame {
         header.setPreferredSize(new Dimension(700, 90));
         header.setBorder(BorderFactory.createEmptyBorder(18, 28, 18, 28));
 
-        formTitle = new JLabel("Add Student Record");
+        formTitle = new JLabel("Add Patient Record");
         formTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
         formTitle.setForeground(WHITE);
         JLabel sub = new JLabel("Fill in the details and drag sliders to assess");
@@ -156,9 +155,6 @@ public class StudentMentalHealthGUI extends JFrame {
         return root;
     }
 
-    // ══════════════════════════════════════════
-    //  TAB 2 — RECORDS TABLE
-    // ══════════════════════════════════════════
     JPanel buildRecordsTab() {
         JPanel root = new JPanel(new BorderLayout(0,0));
         root.setBackground(BG);
@@ -166,7 +162,7 @@ public class StudentMentalHealthGUI extends JFrame {
         JPanel topBar = new JPanel(new BorderLayout());
         topBar.setBackground(BLUE);
         topBar.setBorder(BorderFactory.createEmptyBorder(14, 20, 14, 20));
-        JLabel title = new JLabel("All Student Records");
+        JLabel title = new JLabel("All Records");
         title.setFont(new Font("Segoe UI", Font.BOLD, 18));
         title.setForeground(WHITE);
         topBar.add(title, BorderLayout.WEST);
@@ -174,10 +170,8 @@ public class StudentMentalHealthGUI extends JFrame {
         JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         btnBar.setOpaque(false);
         JButton addNewBtn    = makeSmallButton("+ Add New",       WHITE, BLUE);
-        JButton deleteTopBtn = makeSmallButton("Delete Selected", WHITE, BLUE);
         addNewBtn.addActionListener(e -> { clearForm(); tabs.setSelectedIndex(0); });
         btnBar.add(addNewBtn);
-        btnBar.add(deleteTopBtn);
         topBar.add(btnBar, BorderLayout.EAST);
         root.add(topBar, BorderLayout.NORTH);
 
@@ -208,18 +202,21 @@ public class StudentMentalHealthGUI extends JFrame {
             tabs.setSelectedIndex(0);
         });
 
+        // ── Delete from records ONLY — history is untouched ──────────────────
         ActionListener doDelete = e -> {
             int row = table.getSelectedRow();
             if (row < 0) { JOptionPane.showMessageDialog(this, "Please select a record to delete."); return; }
             int confirm = JOptionPane.showConfirmDialog(this,
-                "Delete record for: " + records.get(row).getName() + "?",
+                "Delete record for: " + records.get(row).getName() + "?\n(History entry will be preserved)",
                 "Confirm Delete", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                records.remove(row); saveToFile(); refreshTable(); refreshHistory();
+                records.remove(row);
+                saveToFile();       // saves records and history separately
+                refreshTable();
+                refreshHistory();   // history list unchanged — just re-render
             }
         };
         deleteBtn.addActionListener(doDelete);
-        deleteTopBtn.addActionListener(doDelete);
         exportBtn.addActionListener(e -> exportSummary());
 
         btnPanel.add(editBtn);
@@ -229,9 +226,6 @@ public class StudentMentalHealthGUI extends JFrame {
         return root;
     }
 
-    // ══════════════════════════════════════════
-    //  TAB 3 — HISTORY
-    // ══════════════════════════════════════════
     JPanel buildHistoryTab() {
         JPanel root = new JPanel(new BorderLayout(0,0));
         root.setBackground(BG);
@@ -245,7 +239,8 @@ public class StudentMentalHealthGUI extends JFrame {
         topBar.add(title, BorderLayout.WEST);
         JLabel sub = new JLabel("All checks — most recent first");
         sub.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        sub.setForeground(new Color(190,205,255));
+        sub.setForeground(new Color(255, 255, 255));
+        sub.setBackground(new Color(0, 0, 255));
         topBar.add(sub, BorderLayout.EAST);
         root.add(topBar, BorderLayout.NORTH);
 
@@ -262,36 +257,26 @@ public class StudentMentalHealthGUI extends JFrame {
         scroll.setBackground(BG);
         root.add(scroll, BorderLayout.CENTER);
 
+        // ── Bottom bar: export only — no delete button (history is permanent) ──
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 12));
         bottom.setBackground(BG);
-        JButton delBtn = makeSmallButton("  Delete Selected", RED, WHITE);
-        delBtn.addActionListener(e -> {
-            int row = histTable.getSelectedRow();
-            if (row < 0) { JOptionPane.showMessageDialog(this, "Please select a record to delete."); return; }
-            String hName = (String) historyModel.getValueAt(row, 0);
-            String hDate = (String) historyModel.getValueAt(row, 4);
-            int confirm = JOptionPane.showConfirmDialog(this,
-                "Delete history entry for: " + hName + " on " + hDate + "?",
-                "Confirm Delete", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                records.removeIf(r -> r.getName().equals(hName) && r.getDate().equals(hDate));
-                saveToFile(); refreshTable(); refreshHistory();
-            }
-        });
-        JButton exportBtn = makeSmallButton("  Export History", GREEN, WHITE);
+
+        JLabel note = new JLabel("ℹ  History is permanent and cannot be deleted.");
+        note.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        note.setForeground(TEXT_MUTED);
+        bottom.add(note);
+
+        JButton exportBtn = makeSmallButton("  Export History", WHITE, GREEN);
         exportBtn.addActionListener(e -> exportSummary());
-        bottom.add(delBtn);
         bottom.add(exportBtn);
+
         root.add(bottom, BorderLayout.SOUTH);
         return root;
     }
 
-    // ══════════════════════════════════════════
-    //  RESULT POPUP WINDOW
-    // ══════════════════════════════════════════
     void showResultWindow(String name, int total, String status, String suggestion) {
         JDialog dialog = new JDialog(this, "Mental Health Result", true);
-        dialog.setSize(460, 320);
+dialog.setSize(500, total >= 18 ? 620 : 340);
         dialog.setLocationRelativeTo(this);
         dialog.setResizable(false);
 
@@ -332,7 +317,7 @@ public class StudentMentalHealthGUI extends JFrame {
         body.setBackground(new Color(248, 250, 255));
         body.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
 
-        JLabel scoreTitle = new JLabel("Score Breakdown");
+        JLabel scoreTitle = new JLabel("Your Result Summary:");
         scoreTitle.setFont(new Font("Segoe UI", Font.BOLD, 12));
         scoreTitle.setForeground(TEXT_MUTED);
         scoreTitle.setAlignmentX(LEFT_ALIGNMENT);
@@ -356,7 +341,7 @@ public class StudentMentalHealthGUI extends JFrame {
         body.add(barBg);
         body.add(Box.createVerticalStrut(18));
 
-        JLabel suggTitle = new JLabel("Suggestion");
+        JLabel suggTitle = new JLabel("Suggestion:");
         suggTitle.setFont(new Font("Segoe UI", Font.BOLD, 12));
         suggTitle.setForeground(TEXT_MUTED);
         suggTitle.setAlignmentX(LEFT_ALIGNMENT);
@@ -374,6 +359,12 @@ public class StudentMentalHealthGUI extends JFrame {
         suggArea.setAlignmentX(LEFT_ALIGNMENT);
         body.add(suggArea);
         body.add(Box.createVerticalStrut(20));
+        if (total >= 18) {
+    body.add(makeCounselingPanel());
+    body.add(Box.createVerticalStrut(10));
+}
+
+body.add(Box.createVerticalStrut(20));
 
         JButton closeBtn = new JButton("Close") {
             protected void paintComponent(Graphics g) {
@@ -395,15 +386,83 @@ public class StudentMentalHealthGUI extends JFrame {
         closeBtn.addActionListener(e -> dialog.dispose());
         body.add(closeBtn);
 
-        dialog.setLayout(new BorderLayout());
-        dialog.add(header, BorderLayout.NORTH);
-        dialog.add(body,   BorderLayout.CENTER);
-        dialog.setVisible(true);
+        JScrollPane bodyScroll = new JScrollPane(body);
+bodyScroll.setBorder(null);
+bodyScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+bodyScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+bodyScroll.getVerticalScrollBar().setUnitIncrement(12);
+
+dialog.setLayout(new BorderLayout());
+dialog.add(header,     BorderLayout.NORTH);
+dialog.add(bodyScroll, BorderLayout.CENTER);
+dialog.setVisible(true);;
+    }
+    JPanel makeCounselingPanel() {
+    JPanel panel = new JPanel();
+    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    panel.setBackground(new Color(255, 245, 245));
+    panel.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(220, 80, 80), 1),
+        BorderFactory.createEmptyBorder(12, 14, 12, 14)));
+    panel.setAlignmentX(LEFT_ALIGNMENT);
+
+    JLabel heading = new JLabel("🆘  Please reach out to a professional:");
+    heading.setFont(new Font("Segoe UI", Font.BOLD, 13));
+    heading.setForeground(new Color(180, 30, 30));
+    panel.add(heading);
+    panel.add(Box.createVerticalStrut(10));
+
+    String[][] contacts = {
+        {"🏥 Aga Khan University Hospital – Psychiatry",
+         "📍 Stadium Road, Karachi",
+         "📞 021-111-911-911",
+         "🕘 Mon–Sat: 8:00 AM – 8:00 PM"},
+
+        {"🏥 Umang – Mental Health Helpline (Pakistan)",
+         "📍 Nationwide (Remote Counseling)",
+         "📞 0317-4288665",
+         "🕘 Daily: 10:00 AM – 6:00 PM"},
+
+        {"🏥 Rozan Counseling Center",
+         "📍 House 7, Street 58, F-7/4, Islamabad",
+         "📞 051-2890505",
+         "🕘 Mon–Fri: 9:00 AM – 5:00 PM"},
+
+        {"🏥 Institute of Behavioral Sciences (IBS)",
+         "📍 Gulberg III, Lahore",
+         "📞 042-35761999",
+         "🕘 Mon–Sat: 9:00 AM – 7:00 PM"},
+
+        {"🏥 Fountain House Lahore",
+         "📍 73 Empress Road, Lahore",
+         "📞 042-36360177",
+         "🕘 Mon–Fri: 9:00 AM – 4:00 PM"}
+    };
+
+    for (String[] c : contacts) {
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(WHITE);
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(230, 200, 200), 1),
+            BorderFactory.createEmptyBorder(8, 10, 8, 10)));
+        card.setAlignmentX(LEFT_ALIGNMENT);
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
+
+        for (String line : c) {
+            JLabel lbl = new JLabel(line);
+            lbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            lbl.setForeground(TEXT_DARK);
+            card.add(lbl);
+        }
+
+        panel.add(card);
+        panel.add(Box.createVerticalStrut(8));
     }
 
-    // ══════════════════════════════════════════
-    //  SHARED TABLE STYLING
-    // ══════════════════════════════════════════
+    return panel;
+}
+
     JTable buildStyledTable(DefaultTableModel model) {
         JTable table = new JTable(model);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -440,9 +499,6 @@ public class StudentMentalHealthGUI extends JFrame {
         return table;
     }
 
-    // ══════════════════════════════════════════
-    //  CRUD
-    // ══════════════════════════════════════════
     void saveRecord() {
         String name = getVal(nameField, "e.g. Anoosha Khan");
         String ageT = getVal(ageField,  "e.g. 19");
@@ -480,7 +536,10 @@ public class StudentMentalHealthGUI extends JFrame {
             records.add(new StudentRecord(name, age, sleep, stress, mood, social, focus, total, status, date));
         }
 
-        saveToFile();
+        // ── Always append a snapshot to the permanent history list ───────────
+        history.add(new StudentRecord(name, age, sleep, stress, mood, social, focus, total, status, date));
+
+        saveToFile();       // persists both records and history to separate files
         refreshTable();
         refreshHistory();
         showResultWindow(name, total, status, suggestion);
@@ -491,11 +550,12 @@ public class StudentMentalHealthGUI extends JFrame {
         for (StudentRecord rec : records) tableModel.addRow(rec.toTableRow());
     }
 
+    // ── History always reads from the separate `history` list ───────────────
     void refreshHistory() {
         if (historyModel == null) return;
         historyModel.setRowCount(0);
-        for (int i = records.size()-1; i >= 0; i--) {
-            StudentRecord rec = records.get(i);
+        for (int i = history.size()-1; i >= 0; i--) {
+            StudentRecord rec = history.get(i);
             historyModel.addRow(new Object[]{
                 rec.getName(),
                 rec.getAge(),
@@ -520,9 +580,6 @@ public class StudentMentalHealthGUI extends JFrame {
         saveBtn.setText("  UPDATE RECORD");
     }
 
-    // ══════════════════════════════════════════
-    //  EXPORT  ← FIXED METHOD
-    // ══════════════════════════════════════════
     void exportSummary() {
         if (records.isEmpty()) {
             JOptionPane.showMessageDialog(this, "No records to export.");
@@ -533,7 +590,7 @@ public class StudentMentalHealthGUI extends JFrame {
         chooser.setSelectedFile(new File("summary_report.txt"));
 
         if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
-            return; // user cancelled
+            return;
         }
 
         File file = chooser.getSelectedFile();
@@ -543,9 +600,9 @@ public class StudentMentalHealthGUI extends JFrame {
             pw.println("   STUDENT MENTAL HEALTH SUMMARY REPORT");
             pw.println("========================================");
             pw.println("Total Students: " + records.size());
-            long good = records.stream().filter(r -> r.getStatus().contains("Good")).count();
-            long mod  = records.stream().filter(r -> r.getStatus().contains("Moderate")).count();
-            long high = records.stream().filter(r -> r.getStatus().contains("High")).count();
+            long good = records.stream().filter(rec -> rec.getStatus().contains("Good")).count();
+            long mod  = records.stream().filter(rec -> rec.getStatus().contains("Moderate")).count();
+            long high = records.stream().filter(rec -> rec.getStatus().contains("High")).count();
             pw.println("Good: " + good + "  |  Moderate: " + mod + "  |  High Stress: " + high);
             pw.println("----------------------------------------");
             for (StudentRecord rec : records) {
@@ -559,30 +616,46 @@ public class StudentMentalHealthGUI extends JFrame {
         }
     }
 
-    // ══════════════════════════════════════════
-    //  FILE I/O
-    // ══════════════════════════════════════════
+    // ── Saves records and history to two separate files ──────────────────────
     void saveToFile() {
+        // Save active records
         try (PrintWriter pw = new PrintWriter(new FileWriter(FILE_NAME))) {
-            for (StudentRecord r : records) pw.println(r.toFileLine());
+            for (StudentRecord rec : records) pw.println(rec.toFileLine());
+        } catch (IOException e) { e.printStackTrace(); }
+
+        // Save permanent history (append-only in memory, full rewrite to file)
+        try (PrintWriter pw = new PrintWriter(new FileWriter(HISTORY_FILE_NAME))) {
+            for (StudentRecord rec : history) pw.println(rec.toFileLine());
         } catch (IOException e) { e.printStackTrace(); }
     }
 
+    // ── Loads both records and history from their separate files ─────────────
     void loadFromFile() {
+        // Load active records
         File f = new File(FILE_NAME);
-        if (!f.exists()) return;
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                StudentRecord r = StudentRecord.fromFileLine(line);
-                if (r != null) records.add(r);
-            }
-        } catch (IOException e) { e.printStackTrace(); }
+        if (f.exists()) {
+            try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    StudentRecord rec = StudentRecord.fromFileLine(line);
+                    if (rec != null) records.add(rec);
+                }
+            } catch (IOException e) { e.printStackTrace(); }
+        }
+
+        // Load permanent history
+        File hf = new File(HISTORY_FILE_NAME);
+        if (hf.exists()) {
+            try (BufferedReader br = new BufferedReader(new FileReader(hf))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    StudentRecord rec = StudentRecord.fromFileLine(line);
+                    if (rec != null) history.add(rec);
+                }
+            } catch (IOException e) { e.printStackTrace(); }
+        }
     }
 
-    // ══════════════════════════════════════════
-    //  UI HELPERS
-    // ══════════════════════════════════════════
     void clearForm() {
         editingIndex = -1;
         setField(nameField, "", "e.g. Anoosha Khan");

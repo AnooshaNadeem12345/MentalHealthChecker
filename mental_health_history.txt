@@ -1,0 +1,10 @@
+Ayan|21|3|3|3|3|3|15|Moderate Stress|12/05/2026 18:45
+Azan|21|3|3|3|3|3|15|Moderate Stress|12/05/2026 18:45
+Affiya|21|3|3|3|3|3|15|Moderate Stress|12/05/2026 18:45
+Aria|21|2|4|3|3|5|17|Moderate Stress|12/05/2026 18:46
+Aaliyah|29|4|4|4|3|5|20|High Stress - Seek Help|12/05/2026 18:46
+Aliyaa|20|5|5|5|4|4|23|High Stress - Seek Help|12/05/2026 18:57
+Anoosha|23|5|4|5|4|5|23|High Stress - Seek Help|12/05/2026 18:59
+Amna|23|3|4|5|5|4|21|High Stress - Seek Help|12/05/2026 19:02
+Asmita|23|5|5|5|5|4|24|High Stress - Seek Help|12/05/2026 19:04
+Aliyah|25|5|4|5|4|4|22|High Stress - Seek Help|12/05/2026 19:05
